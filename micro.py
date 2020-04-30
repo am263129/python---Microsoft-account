@@ -11,6 +11,7 @@ import getpass, os, imaplib, email
 import tkinter as tk
 import names
 import pybase64
+import schedule
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -52,8 +53,8 @@ def read_config_data():
 # Create random Email
 def Create_email():
     letters = string.ascii_lowercase
-    email = ''.join(random.choice(letters) for i in range(randint(5,10)))
-    for j in range(randint(5,9)):
+    email = ''.join(random.choice(letters) for i in range(randint(5,7)))
+    for j in range(randint(4,6)):
         email += str(randint(0,9))
     email += "@liveemail24.de"
     return email
@@ -169,7 +170,7 @@ def pass_captcha(img_url):
 def email_verify():
     try:
         conn = imaplib.IMAP4_SSL(host='ha01s015.org-dns.com')
-        (retcode, capabilities) = conn.login("fifa@liveemail24.de","Ahd?q707")
+        (retcode, capabilities) = conn.login("@liveemail24.de","")
     
     except:
         return "Error Log in"
@@ -254,10 +255,16 @@ def page_one(driver, index):
         input_email.send_keys(list_agent[index]['Email'])
         btn_next = driver.find_element_by_xpath('//*[@id="iSignupAction"]')
         btn_next.click()
-        return "Success"
-
     except:
         return "Unknown Error_1"
+    time.sleep(2)
+    try:
+        btn_next = driver.find_element_by_xpath('//*[@id="iSignupAction"]')
+        error_message = driver.find_element_by_xpath('//*[@id="MemberNameError"]').get_attribute('innerHTML')
+        return error_message
+    except:
+        return "Success"
+
 def page_second(driver, index):
     try:
         while True:
@@ -363,15 +370,16 @@ def page_six(driver, index):
     #captcha
     time.sleep(3)
     try:
-        captcha_container = driver.find_element_by_class_name("winscroll").get_attribute("innerHTML")
+        captcha_container = driver.find_element_by_class_name("win-scroll").get_attribute("innerHTML")
         if "Enter the characters you see" not in captcha_container:
             return "No captcha"
-        input_code = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div[3]/div[1]/div[5]/div/div/form/div[2]/div[4]/div[3]/input')
-        btn_next = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div[3]/div[1]/div[5]/div/div/form/div[3]/div/div/div/div[2]/input')
-        btn_refresh = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div[3]/div[1]/div[5]/div/div/form/div[2]/div[4]/div[2]/a[1]')
+        input_code = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div[3]/div/div[1]/div[5]/div/div/form/div[5]/div[3]/input')
+                                                
+        btn_next = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div[3]/div/div[1]/div[5]/div/div/form/div[7]/div/div/div[2]/input')
+        btn_refresh = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div[3]/div/div[1]/div[5]/div/div/form/div[5]/div[2]/a[1]')
 
         for i in range(3):            
-            cap_image = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div[3]/div[1]/div[5]/div/div/form/div[2]/div[4]/div[1]/img').get_attribute("src")            
+            cap_image = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div[3]/div/div[1]/div[5]/div/div/form/div[5]/div[1]/img').get_attribute("src")            
             cap_code = (pass_captcha(cap_image))
             upgrade_status(cap_code)
             if "Error" in cap_code:
@@ -390,12 +398,23 @@ def page_six(driver, index):
         
     except:
         return "Unknown Error_6"
+def page_seven(driver, index):
+    print("this is step 7")
+    time.sleep(3)
+    try:
+        phone_require = driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div[3]/div/div[1]/div[5]/div/div/form/div[5]/div[1]/div[2]/label').get_attribute("innerHTML")                                          
+        upgrade_status(phone_require)
+        if phone_require == "Phone number":
+            return "Error. Require phone"
+        upgrade_status(phone_require)
+    except:
+        return "Success"
 
 def _loop(index):
 
     url = "https://signup.live.com/"
     
-    proxy_index = randint(0,53)
+    proxy_index = randint(0,len(list_proxy)-1)
     
     while True:
         driver = Create_driver(list_proxy[randint(0,proxy_index)]['IP'] + ":"  + list_proxy[randint(0,proxy_index)]['Port'])
@@ -409,7 +428,7 @@ def _loop(index):
             upgrade_status("Blocked proxy : " + list_proxy[proxy_index]['IP'])
             damaged_proxy_list.append(list_proxy[proxy_index]['IP'])
             while True:
-                proxy_index = randint(0,53)
+                proxy_index = randint(0,len(list_proxy)-1)
                 doublicated = False
                 for i in range(len(damaged_proxy_list)):
                     if proxy_index == damaged_proxy_list[i]:
@@ -458,11 +477,11 @@ def _loop(index):
         save_all_data(Email = list_agent[index]["Email"],State = list_agent[index]["State"], Postal_code = list_agent[index]["Postal Code"], City = list_agent[index]["City"]  ,password = Password, status = result)
         driver.close()
         return
-    # result = page_seven(driver,index)
-    # if "Error" in result:
-    #     save_all_data(Email = list_agent[index]["Email"],State = list_agent[index]["State"], Postal_code = list_agent[index]["Postal Code"], City = list_agent[index]["City"]  ,password = Password, status = result)
-    #     driver.close()
-    #     return
+    result = page_seven(driver,index)
+    if "Error" in result:
+        save_all_data(Email = list_agent[index]["Email"],State = list_agent[index]["State"], Postal_code = list_agent[index]["Postal Code"], City = list_agent[index]["City"]  ,password = Password, status = result)
+        driver.close()
+        return
     upgrade_status("[:--->> Saving result data...")
     save_all_data(Email = list_agent[index]["Email"],
         firstname = list_agent[index]["First Name"],
@@ -501,6 +520,10 @@ def Start():
 
     threading.Thread(target=main_loop).start()
 
+def Start_Cron():
+
+
+    Start()
 
 def main_loop():
     # driver = Create_driver()
@@ -525,6 +548,9 @@ def main_loop():
     Create_agent_list(total_number)
     print(list_agent)
     for i in range(total_number):
+        if(i% 10 ==1):
+            upgrade_status("Cron Running!")
+            time.sleep(60 * int(Entry_time_cron.get()))
         _loop(i)
 
     file_directory = os.path.dirname(os.path.abspath(__file__))
@@ -562,17 +588,20 @@ if __name__ == '__main__':
     Label_number_account.grid(row = 1, column = 0 , sticky = E)
     Entry_number_account =  Entry(root, bd =2, width = 30)
     Entry_number_account.grid(row = 1, column = 1)
+    Label_time_cron =  Label(root, text="Time of Cron(Min)", width = 20)
+    Label_time_cron.grid(row = 2, column = 0 , sticky = E)
+    Entry_time_cron =  Entry(root, bd =2, width = 30)
+    Entry_time_cron.grid(row = 2, column = 1)
 
-
-    Btn_start = Button(root, width = 20, text = "Start", command = lambda: Start() )
+    Btn_start = Button(root, width = 20, text = "Start", command = lambda: Start_Cron())
     Btn_start.grid( row = 1, column = 2, sticky = W + E)
     Btn_start.grid(padx=30, pady=5)
 
     Label_status =  Label(root, text="Current status", width = 20)
-    Label_status.grid(row = 2, column = 0 , sticky = E)
+    Label_status.grid(row = 3, column = 0 , sticky = E)
 
     output_status = Frame(root,width = 700,height = 10, background = "pink")
-    output_status.grid(columnspan = 5, row = 3,rowspan = 8, sticky = W+E,padx=20, pady=5)
+    output_status.grid(columnspan = 5, row = 4,rowspan = 8, sticky = W+E,padx=20, pady=5)
 
     S = Scrollbar(output_status)
     T = Text(output_status, height=10, width=700, state="normal")
