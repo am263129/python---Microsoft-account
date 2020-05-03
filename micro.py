@@ -116,9 +116,10 @@ def Create_driver(address = "23.88.195.47:23667", username = "mare", userpass = 
                             'httpProxy': proxy['address'],
                             'ftpProxy': proxy['address'],
                             'sslProxy': proxy['address'],
-                            'noProxy': '',
-                            'class': "org.openqa.selenium.Proxy",
-                            'autodetect': True}
+                            "noProxy":None,
+                            "proxyType":"MANUAL",
+                            "class":"org.openqa.selenium.Proxy",
+                            "autodetect":False}
 
 
     # capabilities['proxy']['socksUsername'] = proxy['username']
@@ -134,10 +135,13 @@ def Create_driver(address = "23.88.195.47:23667", username = "mare", userpass = 
     options.add_argument('--start-maximized')
     options.add_argument("--enable-automation")
     options.add_argument("--test-type=browser")
+    options.add_argument('--proxy-server=%s' %  proxy['address'])
 
     driver = webdriver.Chrome(executable_path="chromedriver", options = options,desired_capabilities=capabilities)
+    # driver = webdriver.Chrome(executable_path="chromedriver", options = options)
     # desired_capabilities=capabilities
     time.sleep(3)
+    upgrade_status(proxy['address'])
     
     return driver
 
@@ -170,7 +174,7 @@ def pass_captcha(img_url):
 def email_verify():
     try:
         conn = imaplib.IMAP4_SSL(host='ha01s015.org-dns.com')
-        (retcode, capabilities) = conn.login("@liveemail24.de","")
+        (retcode, capabilities) = conn.login("fifa@liveemail24.de","j*j1sY20")
     
     except:
         return "Error Log in"
