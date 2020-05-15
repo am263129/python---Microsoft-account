@@ -149,7 +149,7 @@ def pass_captcha(img_url):
     img = pybase64.b64encode(requests.get(img_url).content)
     if img.decode("utf-8").strip() == "":
         return "Error No Image"
-    API_KEY = '7c2e86703284311b6e6b09845f815bf3' 
+    API_KEY = 'Your API KEY' 
     url = 'http://2captcha.com/in.php'
     data = {'key': API_KEY, 'method': 'base64' , 'body':img}
     res = requests.post(url, data=data)
